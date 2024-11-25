@@ -1,0 +1,14 @@
+{
+    "NETWORK_FOLDER": "w:/Pomoika/smsTgBot/",
+    "TOKEN": "7960500201:AAHvJswbgjeAuB2cOE5kCWAojNKsICwVqe0",
+    "SET_PATH": 1,
+    "ALLOWED_USERS": [
+        1268380400,
+        1549629525,
+        891845953
+    ],
+    "ADMINS": [
+        1268380400
+    ],
+    "REQUESTS": {}
+}
