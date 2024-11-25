@@ -2,7 +2,7 @@ import os
 import datetime
 import logging
 import re
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, PhotoSize, Video
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
 
 # Настройка логирования
@@ -10,7 +10,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # Путь к сетевой папке по умолчанию
-NETWORK_FOLDER = 'C:/Users/medvedev/Desktop/telegramBot'
+NETWORK_FOLDER = 'w:/Pomoika/сообщения тг бота/'
 
 # Токен вашего бота
 TOKEN = '7960500201:AAHvJswbgjeAuB2cOE5kCWAojNKsICwVqe0'
@@ -88,6 +88,65 @@ async def save_file(update: Update, context: CallbackContext) -> None:
     folder_link = f"Ссылка на папку: file://{folder_path}\nПапка создана: {current_time}"
     await update.message.reply_text(folder_link)
 
+async def save_photo(update: Update, context: CallbackContext) -> None:
+    if update.message.from_user.id not in ALLOWED_USERS:
+        await update.message.reply_text('Извините, у вас нет доступа к этому боту.')
+        return
+
+    # Получаем наибольший размер фотографии
+    photo: PhotoSize = update.message.photo[-1]
+    file = await photo.get_file()
+    file_name = f"{photo.file_unique_id}.jpg"
+    user_id = update.message.from_user.id
+    user_name = update.message.from_user.username or update.message.from_user.first_name
+
+    # Используем путь из контекста, если он есть, иначе используем путь по умолчанию
+    network_folder = context.user_data.get('network_folder', NETWORK_FOLDER)
+
+    # Создаем папку с названием Дата-время-от-кого
+    current_time = datetime.datetime.now().strftime('%d.%m.%Y_%H:%M')
+    folder_name = f"{current_time}-{user_name}"
+    sanitized_folder_name = sanitize_filename(folder_name)
+    folder_path = os.path.join(network_folder, sanitized_folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+
+    # Сохраняем фотографию в папку
+    file_path = os.path.join(folder_path, file_name)
+    await file.download_to_drive(file_path)
+
+    # Возвращаем ссылку на папку с указанием времени создания
+    folder_link = f"Ссылка на папку: file://{folder_path}\nПапка создана: {current_time}"
+    await update.message.reply_text(folder_link)
+
+async def save_video(update: Update, context: CallbackContext) -> None:
+    if update.message.from_user.id not in ALLOWED_USERS:
+        await update.message.reply_text('Извините, у вас нет доступа к этому боту.')
+        return
+
+    video: Video = update.message.video
+    file = await video.get_file()
+    file_name = f"{video.file_unique_id}.mp4"
+    user_id = update.message.from_user.id
+    user_name = update.message.from_user.username or update.message.from_user.first_name
+
+    # Используем путь из контекста, если он есть, иначе используем путь по умолчанию
+    network_folder = context.user_data.get('network_folder', NETWORK_FOLDER)
+
+    # Создаем папку с названием Дата-время-от-кого
+    current_time = datetime.datetime.now().strftime('%d.%m.%Y_%H:%M')
+    folder_name = f"{current_time}-{user_name}"
+    sanitized_folder_name = sanitize_filename(folder_name)
+    folder_path = os.path.join(network_folder, sanitized_folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+
+    # Сохраняем видео в папку
+    file_path = os.path.join(folder_path, file_name)
+    await file.download_to_drive(file_path)
+
+    # Возвращаем ссылку на папку с указанием времени создания
+    folder_link = f"Ссылка на папку: file://{folder_path}\nПапка создана: {current_time}"
+    await update.message.reply_text(folder_link)
+
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
@@ -103,6 +162,8 @@ def main() -> None:
     application.add_handler(conv_handler)
     application.add_handler(CommandHandler("getpath", get_path))
     application.add_handler(MessageHandler(filters.Document.ALL, save_file))
+    application.add_handler(MessageHandler(filters.PHOTO, save_photo))
+    application.add_handler(MessageHandler(filters.VIDEO, save_video))
 
     application.run_polling()
 
