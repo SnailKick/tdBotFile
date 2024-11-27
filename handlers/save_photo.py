@@ -17,10 +17,16 @@ async def save_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
     network_folder = context.user_data.get('network_folder', context.bot_data['NETWORK_FOLDER'])
 
-    current_time = datetime.datetime.now().strftime('%d.%m.%Y_%H:%M')
+    # Создаем папку с именем аккаунта пользователя
+    user_folder_name = sanitize_filename(user_name)
+    user_folder_path = os.path.join(network_folder, user_folder_name)
+    os.makedirs(user_folder_path, exist_ok=True)
+
+    # Создаем папку с датой и именем пользователя
+    current_time = datetime.datetime.now().strftime('%d.%m.%Y_%H:00')
     folder_name = f"{current_time}-{user_name}"
     sanitized_folder_name = sanitize_filename(folder_name)
-    folder_path = os.path.join(network_folder, sanitized_folder_name)
+    folder_path = os.path.join(user_folder_path, sanitized_folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
     file_path = os.path.join(folder_path, file_name)
